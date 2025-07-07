@@ -91,8 +91,16 @@
       selection: false,
       preserveObjectStacking: true
     });
-    canvas.setWidth(window.innerWidth * 0.9);
-    canvas.setHeight(window.innerHeight * 0.5);
+
+    function resizeCanvas() {
+      const width = window.innerWidth * 0.9;
+      const height = width * 1.2; // key fix: make it taller
+      canvas.setWidth(width);
+      canvas.setHeight(height);
+      canvas.renderAll();
+    }
+
+    resizeCanvas();
 
     let userImage = null;
     let overlay1 = null;
@@ -223,11 +231,8 @@
     });
 
     window.addEventListener('resize', () => {
-      canvas.setWidth(window.innerWidth * 0.9);
-      canvas.setHeight(window.innerHeight * 0.5);
-      canvas.renderAll();
+      resizeCanvas();
     });
   </script>
 </body>
 </html>
-
