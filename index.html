@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Tit Viper Overlay Studio</title>
+  <style>
+    body {
+      background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
+      color: #fff;
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .logo {
+      width: 120px;
+      height: auto;
+      margin-bottom: 15px;
+    }
+    h1 {
+      font-size: 2rem;
+      background: linear-gradient(90deg, #ff9900, #ff6600);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-align: center;
+      text-shadow: 0 0 15px rgba(255, 153, 0, 0.7);
+      margin: 10px 0;
+    }
+    .drop-zone {
+      width: 90%;
+      max-width: 500px;
+      height: 160px;
+      border: 3px dashed #ff9900;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: 0.3s;
+      text-align: center;
+      padding: 8px;
+      font-size: 1rem;
+    }
+    .drop-zone:hover {
+      background: rgba(255, 153, 0, 0.1);
+      box-shadow: 0 0 15px #ff9900;
+    }
+    canvas {
+      width: 100%;
+      max-width: 90%;
+      height: auto;
+      margin-top: 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 15px rgba(255, 153, 0, 0.5);
+    }
+    button {
+      background: #ff6600;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-top: 20px;
+      transition: 0.3s;
+      width: 90%;
+      max-width: 300px;
+    }
+    button:hover {
+      background: #ff9900;
+      box-shadow: 0 0 12px #ff9900;
+    }
+  </style>
+</head>
+<body>
+  <img src="https://files.catbox.moe/uqu90p.png" alt="Titcoin Logo" class="logo" />
+  <h1>Tit Viper Overlay Studio</h1>
+  <div class="drop-zone" id="dropZone">
+    Tap or Drag an Image Here to Upload
+  </div>
+  <canvas id="canvas" width="800" height="600"></canvas>
+  <button id="swapOverlay">Swap Overlay</button>
+  <button id="download">Download Final Image</button>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
+  <script>
+    const canvas = new fabric.Canvas('canvas', {
+      selection: false,
+      preserveObjectStacking: true
+    });
+    canvas.setWidth(window.innerWidth * 0.9);
+    canvas.setHeight(window.innerHeight * 0.5);
+
+    let userImage = null;
+    let overlay1 = null;
+    let overlay2 = null;
+    let currentOverlay = 1;
+
+    const overlayURL1 = 'https://res.cloudinary.com/dmwmvmg3o/image/upload/v1751927485/titcoinWHT_ckbgfw.png';
+    const overlayURL2 = 'https://res.cloudinary.com/dmwmvmg3o/image/upload/v1751927506/titcoinBLK2_vgn80i.png';
+
+    function loadOverlay(url, callback, left = 100, top = 100, scale = 0.5) {
+      fabric.Image.fromURL(url, img => {
+        img.set({
+          left,
+          top,
+          scaleX: scale,
+          scaleY: scale,
+          cornerSize: 30,
+          borderColor: '#ff9900',
+          cornerColor: '#ff6600',
+          cornerStyle: 'circle',
+          transparentCorners: false,
+          rotatingPointOffset: 40
+        });
+        img.visible = false;
+        callback(img);
+        canvas.add(img);
+        canvas.renderAll();
+      }, { crossOrigin: 'anonymous' });
+    }
+
+    loadOverlay(overlayURL1, img => overlay1 = img);
+    loadOverlay(overlayURL2, img => overlay2 = img);
+
+    // Make the first overlay visible after loading
+    setTimeout(() => {
+      if (overlay1) overlay1.visible = true;
+      canvas.renderAll();
+    }, 500);
+
+    const dropZone = document.getElementById('dropZone');
+
+    dropZone.addEventListener('click', () => {
+      const fileInput = document.createElement('input');
+      fileInput.type = 'file';
+      fileInput.accept = 'image/png,image/jpeg';
+      fileInput.click();
+      fileInput.onchange = e => handleFile(e.target.files[0]);
+    });
+
+    dropZone.addEventListener('dragover', e => {
+      e.preventDefault();
+      dropZone.style.background = 'rgba(255, 153, 0, 0.2)';
+    });
+
+    dropZone.addEventListener('dragleave', e => {
+      e.preventDefault();
+      dropZone.style.background = '';
+    });
+
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.style.background = '';
+      const file = e.dataTransfer.files[0];
+      handleFile(file);
+    });
+
+    function handleFile(file) {
+      const reader = new FileReader();
+      reader.onload = f => {
+        fabric.Image.fromURL(f.target.result, img => {
+          const scaleRatio = Math.min(canvas.width / img.width, canvas.height / img.height);
+          img.set({
+            left: 0,
+            top: 0,
+            scaleX: scaleRatio,
+            scaleY: scaleRatio,
+            selectable: false,
+            evented: false
+          });
+          if (userImage) canvas.remove(userImage);
+          userImage = img;
+          canvas.add(userImage);
+          canvas.sendToBack(userImage);
+          canvas.renderAll();
+        }, { crossOrigin: 'anonymous' });
+      };
+      reader.readAsDataURL(file);
+    }
+
+    document.getElementById('swapOverlay').addEventListener('click', () => {
+      if (overlay1 && overlay2) {
+        if (currentOverlay === 1) {
+          overlay1.visible = false;
+          overlay2.visible = true;
+          canvas.setActiveObject(overlay2);
+          currentOverlay = 2;
+        } else {
+          overlay2.visible = false;
+          overlay1.visible = true;
+          canvas.setActiveObject(overlay1);
+          currentOverlay = 1;
+        }
+        canvas.renderAll();
+      }
+    });
+
+    document.getElementById('download').addEventListener('click', () => {
+      canvas.discardActiveObject();
+      canvas.renderAll();
+      if (!userImage) {
+        alert("Please upload an image first.");
+        return;
+      }
+      const link = document.createElement('a');
+      link.download = 'tit-viper-overlay.png';
+      link.href = canvas.toDataURL({ format: 'png' });
+      link.click();
+    });
+
+    window.addEventListener('resize', () => {
+      canvas.setWidth(window.innerWidth * 0.9);
+      canvas.setHeight(window.innerHeight * 0.5);
+      canvas.renderAll();
+    });
+  </script>
+</body>
+</html>
