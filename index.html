@@ -13,6 +13,7 @@
       flex-direction: column;
       align-items: center;
       padding: 20px;
+      margin: 0;
     }
     .logo {
       width: 120px;
@@ -161,22 +162,29 @@
       const reader = new FileReader();
       reader.onload = f => {
         fabric.Image.fromURL(f.target.result, img => {
-          const scaleRatio = Math.min(canvas.width / img.width, canvas.height / img.height);
-          const newWidth = img.width * scaleRatio;
-          const newHeight = img.height * scaleRatio;
+          const imgRatio = img.width / img.height;
+          const canvasRatio = canvas.width / canvas.height;
+
+          let scaleRatio;
+
+          if (imgRatio > canvasRatio) {
+            scaleRatio = canvas.height / img.height;
+          } else {
+            scaleRatio = canvas.width / img.width;
+          }
 
           img.set({
-            left: (canvas.width - newWidth) / 2,
-            top: (canvas.height - newHeight) / 2,
             scaleX: scaleRatio,
             scaleY: scaleRatio,
             selectable: false,
             evented: false
           });
 
+          canvas.add(img);
+          canvas.centerObject(img);
+
           if (userImage) canvas.remove(userImage);
           userImage = img;
-          canvas.add(userImage);
           canvas.sendToBack(userImage);
           canvas.renderAll();
         }, { crossOrigin: 'anonymous' });
@@ -222,3 +230,4 @@
   </script>
 </body>
 </html>
+
