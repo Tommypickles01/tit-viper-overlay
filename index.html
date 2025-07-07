@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Tit Viper Overlay Studio</title>
+  <title>Titcoin Overlay Studio</title>
   <style>
     body {
       background: linear-gradient(135deg, #0d0d0d, #1a1a1a);
@@ -31,7 +31,7 @@
     .drop-zone {
       width: 90%;
       max-width: 500px;
-      height: 160px;
+      height: 100px; /* ← smaller */
       border: 3px dashed #ff9900;
       border-radius: 12px;
       display: flex;
@@ -76,7 +76,7 @@
 </head>
 <body>
   <img src="https://files.catbox.moe/uqu90p.png" alt="Titcoin Logo" class="logo" />
-  <h1>Tit Viper Overlay Studio</h1>
+  <h1>Titcoin Overlay Studio</h1>
   <div class="drop-zone" id="dropZone">
     Tap or Drag an Image Here to Upload
   </div>
@@ -125,7 +125,6 @@
     loadOverlay(overlayURL1, img => overlay1 = img);
     loadOverlay(overlayURL2, img => overlay2 = img);
 
-    // Make the first overlay visible after loading
     setTimeout(() => {
       if (overlay1) overlay1.visible = true;
       canvas.renderAll();
@@ -206,7 +205,7 @@
         return;
       }
       const link = document.createElement('a');
-      link.download = 'tit-viper-overlay.png';
+      link.download = 'titcoin-overlay.png';
       link.href = canvas.toDataURL({ format: 'png' });
       link.click();
     });
