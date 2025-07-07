@@ -31,7 +31,7 @@
     .drop-zone {
       width: 90%;
       max-width: 500px;
-      height: 100px; /* ← smaller */
+      height: 100px;
       border: 3px dashed #ff9900;
       border-radius: 12px;
       display: flex;
@@ -162,14 +162,18 @@
       reader.onload = f => {
         fabric.Image.fromURL(f.target.result, img => {
           const scaleRatio = Math.min(canvas.width / img.width, canvas.height / img.height);
+          const newWidth = img.width * scaleRatio;
+          const newHeight = img.height * scaleRatio;
+
           img.set({
-            left: 0,
-            top: 0,
+            left: (canvas.width - newWidth) / 2,
+            top: (canvas.height - newHeight) / 2,
             scaleX: scaleRatio,
             scaleY: scaleRatio,
             selectable: false,
             evented: false
           });
+
           if (userImage) canvas.remove(userImage);
           userImage = img;
           canvas.add(userImage);
