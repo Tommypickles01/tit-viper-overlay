@@ -49,7 +49,14 @@
       box-shadow: 0 0 10px #ff9900;
     }
 
-    button {
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 10px;
+    }
+
+    .controls button {
       background: #ff6600;
       color: white;
       font-weight: bold;
@@ -60,7 +67,7 @@
       cursor: pointer;
     }
 
-    button:hover {
+    .controls button:hover {
       background: #ff9900;
     }
   </style>
@@ -70,11 +77,7 @@
   <h1>Titcoin Overlay Studio</h1>
   <div class="drop-zone" id="dropZone">Tap or Drag an Image Here to Upload</div>
   <div class="canvas-container"><canvas id="canvas"></canvas></div>
-
-  <div>
-    <button id="swapOverlay">Swap Overlay</button>
-    <button id="download">Download</button>
-  </div>
+  <div class="controls" id="controls"></div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script>
@@ -117,7 +120,6 @@
           const containerWidth = Math.min(window.innerWidth * 0.95, 960);
           const scale = containerWidth / img.width;
 
-          // Set canvas size to scaled image size (maintain aspect ratio)
           canvas.setWidth(img.width * scale);
           canvas.setHeight(img.height * scale);
 
@@ -140,7 +142,8 @@
       reader.readAsDataURL(file);
     }
 
-    document.getElementById('dropZone').addEventListener('click', () => {
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('click', () => {
       const input = document.createElement('input');
       input.type = 'file';
       input.accept = 'image/*';
@@ -148,29 +151,36 @@
       input.click();
     });
 
-    document.getElementById('dropZone').addEventListener('dragover', e => {
+    dropZone.addEventListener('dragover', e => {
       e.preventDefault();
       e.target.style.background = '#222';
     });
 
-    document.getElementById('dropZone').addEventListener('dragleave', e => {
+    dropZone.addEventListener('dragleave', e => {
       e.preventDefault();
       e.target.style.background = '';
     });
 
-    document.getElementById('dropZone').addEventListener('drop', e => {
+    dropZone.addEventListener('drop', e => {
       e.preventDefault();
       e.target.style.background = '';
       const file = e.dataTransfer.files[0];
       handleImage(file);
     });
 
-    document.getElementById('swapOverlay').addEventListener('click', () => {
+    // Button creation
+    const controls = document.getElementById('controls');
+
+    const swapBtn = document.createElement('button');
+    swapBtn.textContent = 'Swap Overlay';
+    swapBtn.onclick = () => {
       currentOverlayIndex = (currentOverlayIndex + 1) % overlayURLs.length;
       addOverlay(currentOverlayIndex);
-    });
+    };
 
-    document.getElementById('download').addEventListener('click', () => {
+    const downloadBtn = document.createElement('button');
+    downloadBtn.textContent = 'Download';
+    downloadBtn.onclick = () => {
       if (!userImage) {
         alert("Please upload an image first.");
         return;
@@ -192,7 +202,10 @@
       link.download = 'titcoin-overlay.png';
       link.href = dataURL;
       link.click();
-    });
+    };
+
+    controls.appendChild(swapBtn);
+    controls.appendChild(downloadBtn);
   </script>
 </body>
 </html>
