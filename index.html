@@ -2,170 +2,197 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Titcoin Overlay Studio</title>
   <style>
     body {
       margin: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 0;
       background: #111;
-      color: white;
-      text-align: center;
+      color: #fff;
+      font-family: sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
 
     h1 {
-      margin: 1rem 0 0.5rem;
-      color: orange;
-      text-shadow: 0 0 10px orange;
+      font-size: 2rem;
+      background: linear-gradient(90deg, #ff9900, #ff6600);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-top: 20px;
+      text-shadow: 0 0 10px #ff9900;
     }
 
-    #upload-area {
-      border: 2px dashed orange;
+    .drop-zone {
+      border: 3px dashed orange;
+      border-radius: 12px;
       padding: 1rem;
-      margin: 1rem auto;
-      max-width: 90%;
-      border-radius: 10px;
-      color: white;
+      text-align: center;
+      cursor: pointer;
+      margin: 20px;
+      width: 90%;
+      max-width: 500px;
     }
 
-    #canvas-container {
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 1rem;
+    .canvas-container {
+      width: 100%;
+      max-width: 960px;
+      padding: 0 10px;
     }
 
     canvas {
-      max-width: 100%;
-      height: auto;
-      border: 4px solid orange;
+      width: 100% !important;
+      height: auto !important;
       border-radius: 12px;
-      box-shadow: 0 0 20px orange;
-    }
-
-    #button-row {
-      margin: 1rem 0;
+      box-shadow: 0 0 10px #ff9900;
     }
 
     button {
-      background: orange;
-      color: black;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 8px;
-      margin: 0.5rem;
+      background: #ff6600;
+      color: white;
       font-weight: bold;
+      padding: 12px 24px;
+      margin: 10px;
+      border: none;
+      border-radius: 8px;
       cursor: pointer;
-      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
     }
 
     button:hover {
-      background: #ffaa00;
-    }
-
-    @media (max-width: 600px) {
-      canvas {
-        max-height: 90vh;
-      }
+      background: #ff9900;
     }
   </style>
 </head>
 <body>
 
-  <img src="https://res.cloudinary.com/dmwmvmg3o/image/upload/v1751927485/titcoinWHT_ckbgfw.png" id="overlay1" style="display:none;" crossorigin="anonymous" />
-  <img src="https://res.cloudinary.com/dmwmvmg3o/image/upload/v1751927506/titcoinBLK2_vgn80i.png" id="overlay2" style="display:none;" crossorigin="anonymous" />
-
   <h1>Titcoin Overlay Studio</h1>
+  <div class="drop-zone" id="dropZone">Tap or Drag an Image Here to Upload</div>
+  <div class="canvas-container"><canvas id="canvas"></canvas></div>
 
-  <div id="upload-area">
-    <p>Tap or Drag an Image Here to Upload</p>
-    <input type="file" id="imageUpload" accept="image/*" style="display: none;" />
+  <div>
+    <button id="swapOverlay">Swap Overlay</button>
+    <button id="download">Download</button>
   </div>
 
-  <div id="canvas-container">
-    <canvas id="finalCanvas"></canvas>
-  </div>
-
-  <div id="button-row">
-    <button onclick="swapOverlay()">Swap Overlay</button>
-    <button onclick="downloadImage()">Download Final Image</button>
-  </div>
-
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/5.3.0/fabric.min.js"></script>
   <script>
-    const uploadArea = document.getElementById('upload-area');
-    const fileInput = document.getElementById('imageUpload');
-    const canvas = document.getElementById('finalCanvas');
-    const ctx = canvas.getContext('2d');
+    const canvas = new fabric.Canvas('canvas', {
+      selection: false,
+      preserveObjectStacking: true
+    });
 
-    const overlay1 = document.getElementById('overlay1');
-    const overlay2 = document.getElementById('overlay2');
-    let currentOverlay = overlay1;
+    const overlayURLs = [
+      'https://res.cloudinary.com/dmwmvmg3o/image/upload/v1751927485/titcoinWHT_ckbgfw.png',
+      'https://res.cloudinary.com/dmwmvmg3o/image/upload/v1751927506/titcoinBLK2_vgn80i.png'
+    ];
+    let currentOverlayIndex = 0;
+    let currentOverlay = null;
+    let userImage = null;
 
-    let uploadedImage = null;
+    function addOverlay(index) {
+      if (currentOverlay) canvas.remove(currentOverlay);
 
-    function drawFinal() {
-      if (!uploadedImage) return;
-
-      const ratio = uploadedImage.width / uploadedImage.height;
-      const canvasWidth = uploadedImage.width;
-      const canvasHeight = uploadedImage.height;
-
-      canvas.width = canvasWidth;
-      canvas.height = canvasHeight;
-
-      ctx.clearRect(0, 0, canvasWidth, canvasHeight);
-      ctx.drawImage(uploadedImage, 0, 0, canvasWidth, canvasHeight);
-      ctx.drawImage(currentOverlay, 0, 0, canvasWidth, canvasHeight);
+      fabric.Image.fromURL(overlayURLs[index], img => {
+        const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+        img.set({
+          scaleX: scale,
+          scaleY: scale,
+          left: canvas.width / 2,
+          top: canvas.height / 2,
+          originX: 'center',
+          originY: 'center'
+        });
+        currentOverlay = img;
+        canvas.add(img);
+        canvas.renderAll();
+      }, { crossOrigin: 'anonymous' });
     }
 
-    function handleUpload(file) {
+    function handleImage(file) {
       const reader = new FileReader();
-      reader.onload = function (e) {
-        const img = new Image();
-        img.onload = function () {
-          uploadedImage = img;
-          drawFinal();
-        };
-        img.src = e.target.result;
+      reader.onload = e => {
+        fabric.Image.fromURL(e.target.result, img => {
+          const containerWidth = Math.min(window.innerWidth * 0.95, 960);
+          const scale = containerWidth / img.width;
+
+          // Set canvas size to scaled image size (maintain aspect ratio)
+          canvas.setWidth(img.width * scale);
+          canvas.setHeight(img.height * scale);
+
+          img.set({
+            scaleX: scale,
+            scaleY: scale,
+            selectable: false,
+            evented: false
+          });
+
+          if (userImage) canvas.remove(userImage);
+          userImage = img;
+          canvas.clear();
+          canvas.add(img);
+          canvas.sendToBack(img);
+
+          addOverlay(currentOverlayIndex);
+        }, { crossOrigin: 'anonymous' });
       };
       reader.readAsDataURL(file);
     }
 
-    uploadArea.addEventListener('click', () => fileInput.click());
-
-    uploadArea.addEventListener('dragover', (e) => {
-      e.preventDefault();
-      uploadArea.style.borderColor = '#fff';
+    document.getElementById('dropZone').addEventListener('click', () => {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = e => handleImage(e.target.files[0]);
+      input.click();
     });
 
-    uploadArea.addEventListener('dragleave', () => {
-      uploadArea.style.borderColor = 'orange';
+    document.getElementById('dropZone').addEventListener('dragover', e => {
+      e.preventDefault();
+      e.target.style.background = '#222';
     });
 
-    uploadArea.addEventListener('drop', (e) => {
+    document.getElementById('dropZone').addEventListener('dragleave', e => {
       e.preventDefault();
-      uploadArea.style.borderColor = 'orange';
+      e.target.style.background = '';
+    });
+
+    document.getElementById('dropZone').addEventListener('drop', e => {
+      e.preventDefault();
+      e.target.style.background = '';
       const file = e.dataTransfer.files[0];
-      if (file) handleUpload(file);
+      handleImage(file);
     });
 
-    fileInput.addEventListener('change', () => {
-      const file = fileInput.files[0];
-      if (file) handleUpload(file);
+    document.getElementById('swapOverlay').addEventListener('click', () => {
+      currentOverlayIndex = (currentOverlayIndex + 1) % overlayURLs.length;
+      addOverlay(currentOverlayIndex);
     });
 
-    function swapOverlay() {
-      currentOverlay = currentOverlay === overlay1 ? overlay2 : overlay1;
-      drawFinal();
-    }
+    document.getElementById('download').addEventListener('click', () => {
+      if (!userImage) {
+        alert("Please upload an image first.");
+        return;
+      }
 
-    function downloadImage() {
+      const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+      const scale = isMobile ? 2 : 1;
+
+      const dataURL = canvas.toDataURL({
+        format: 'png',
+        multiplier: scale,
+        left: 0,
+        top: 0,
+        width: canvas.width,
+        height: canvas.height
+      });
+
       const link = document.createElement('a');
       link.download = 'titcoin-overlay.png';
-      link.href = canvas.toDataURL('image/png');
+      link.href = dataURL;
       link.click();
-    }
+    });
   </script>
-
 </body>
 </html>
