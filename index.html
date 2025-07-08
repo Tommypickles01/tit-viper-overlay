@@ -50,7 +50,7 @@
     }
     canvas {
       width: 100%;
-      max-width: 90%;
+      max-width: 960px;
       height: auto;
       margin-top: 20px;
       border-radius: 12px;
@@ -93,8 +93,9 @@
     });
 
     function resizeCanvas() {
-      const width = window.innerWidth * 0.9;
-      const height = width * 1.2; // key fix: make it taller
+      const maxWidth = 960;
+      const width = Math.min(window.innerWidth * 0.9, maxWidth);
+      const height = width * 1.2;
       canvas.setWidth(width);
       canvas.setHeight(height);
       canvas.renderAll();
@@ -226,7 +227,14 @@
       }
       const link = document.createElement('a');
       link.download = 'titcoin-overlay.png';
-      link.href = canvas.toDataURL({ format: 'png' });
+      link.href = canvas.toDataURL({
+        format: 'png',
+        multiplier: 2,
+        left: 0,
+        top: 0,
+        width: canvas.width,
+        height: canvas.height
+      });
       link.click();
     });
 
